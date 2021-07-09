@@ -1,4 +1,4 @@
-export MAIN_STACK_NAME=YOURCOMPANY-antiope
+export MAIN_STACK_NAME=YOURCOMPANY-antiope-ENVIRONMENT
 export BUCKET=YOURCOMPANY-antiope
 export AWS_DEFAULT_REGION=us-east-1
 export MANIFEST=Antiope-ENVIRONMENT-Manifest.yaml

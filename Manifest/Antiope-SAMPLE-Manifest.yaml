@@ -74,7 +74,7 @@ Parameters:
   pElasticSearchVersion: 7.9
 
   # ARN of a custom StateMachine to call after inventory state machines are run
-  pDeployCustomStackStateMachineArn:
+  pDeployCustomStackStateMachineArn: NONE
 
   # SNS Topic Arn to Send Info Alerts (Leave as NONE for no info alerts)
   pSNSAlertsInfoArn: NONE
