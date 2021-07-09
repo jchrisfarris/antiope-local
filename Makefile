@@ -51,7 +51,7 @@ deps:
 install: deploy post-deploy
 
 # Everything to deploy a fresh version of code
-deploy: test cft-validate package cft-deploy push-config
+deploy: test cft-validate package cft-deploy
 
 # Package up the nested stacks and code which are copied to S3. Then copy the transformed template to S3 where it will be deployed from
 package: deps
@@ -134,7 +134,7 @@ sync-reports:
 
 # Manually trigger the Antiope Stepfunction
 trigger-inventory:
-	@./bin/trigger_inventory.sh $(MAIN_STACK_NAME)
+	@./antiope/bin/trigger_inventory.sh $(MAIN_STACK_NAME)
 
 # Disable the CloudWatch Event that triggers Antiope
 disable-inventory:
@@ -146,18 +146,13 @@ enable-inventory:
 	$(eval EVENT := $(shell aws cloudformation describe-stacks --stack-name $(MAIN_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==`TriggerEventName`].OutputValue' --output text --region $(AWS_DEFAULT_REGION)))
 	aws events enable-rule --name $(EVENT) --output text --region $(AWS_DEFAULT_REGION)
 
-# FIXME <- move this into stepfunction
-get-inventory-errors:
-	$(eval QUEUE := $(shell aws cloudformation describe-stacks --stack-name $(MAIN_STACK_NAME) --query 'Stacks[0].Outputs[?OutputKey==`ErrorQueue`].OutputValue' --output text --region $(AWS_DEFAULT_REGION)))
-	./bin/pull_errors.py --queue $(QUEUE) --filename $(MAIN_STACK_NAME)-Errors.html --delete
-	open $(MAIN_STACK_NAME)-Errors.html
 
 python-requirements:
 	pip3 install -r requirements.txt
 
 python-env:
-	python3 -m venv .env
-	@echo "now run:\n\tsource .env/bin/activate"
+	python3 -m venv .env-$(env)
+	@echo "now run:\n\tsource .env-$(env)/bin/activate"
 
 python-env-activate:
-	@echo "You need to run this from the parent shell: \n\tsource .env/bin/activate"
+	@echo "You need to run this from the parent shell: \n\tsource .env-$(env)/bin/activate"
