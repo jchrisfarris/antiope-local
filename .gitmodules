@@ -1,0 +1,3 @@
+[submodule "antiope-aws-module"]
+	path = antiope-aws-module
+	url = https://github.com/jchrisfarris/antiope-aws-module.git
