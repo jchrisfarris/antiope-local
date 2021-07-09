@@ -1,0 +1,145 @@
+
+# Manifest Auto-generated at 2020-11-20 18:56:04.211656
+# Template Description: Master Stack to Deploy all of Antiope
+
+# These control how and where the cloudformation is executed
+StackName: YOURCOMPANY-antiope-ENVIRONMENT
+
+Region: us-east-1
+TimeOut: 45m
+TerminationProtection: false
+
+# Either DisableRollback or OnFailure can be specified, not both.
+OnFailure: DO_NOTHING # accepts DO_NOTHING, ROLLBACK, DELETE
+# DisableRollback: true
+
+
+# Parameters:
+# There are two kinds of parameters, regular and sourced.
+# Regular parameters are static and defined in the Parameters: section of this yaml file
+# Sourced are parameters that cft-deploy will go and fetch from other Stacks that are referenced in the DependentStacks section.
+
+
+###########
+# Parameters to the cloudformation stack that are defined manually.
+###########
+Parameters:
+
+  # <optional> IAM Username with access to the Inventory Bucket
+  pIamUserName: YOURCOMPANY-antiope
+
+  # Default Username for Cognito
+  pEmailAddress: SET-YOUR-EMAIL-HERE
+
+  # Factor by which the delay between SNS Publish is shrunk. The larger the number, the more frequent the publish.
+  pStaggerAccelerationFactor: 2
+
+  # Set this to True if you have Business or Enterprise Support and can access support API
+  pAWSEntSupport: False
+
+  # Size of the ES Cluster
+  pClusterInstanceType: t3.medium.elasticsearch
+
+  # Cluster Instance Count
+  pClusterInstanceCount: 3
+
+  # Default name of the AssumeRole to assume into accounts
+  pAWSRoleName: Antiope-Audit
+
+  # How frequently the StepFunction should Run (As a CloudWatch ScheduleExpression)
+  pExecutionRate: cron(0 0/4 * * ? *)
+
+  # Set this to True if you want Inventory EBS and Snapshots
+  pAWSEBSInventory: false
+
+  # ARN of Azure StateMachine to call during the inventory phase of the master StepFunction
+  pDeployAzureStackStateMachineArn: NONE
+
+  # ARN of the GCP StateMachine to call during the inventory phase of the master StepFunction
+  pDeployGCPStackStateMachineArn: NONE
+
+  # How long to let the Lambda Run
+  pMaxLambdaDuration: 300
+
+  # Enable to disable the CloudWatch Event to fire the Stepfunction
+  pRuleState: ENABLED
+
+  # The Custom Domain Name you will configure once the API Gateway is created
+  pCognitoAPIDomain: YOURCOMPANY-antiope
+
+  # SNS Topic Arn to Send Error Alerts (Leave as NONE for no error alerts)
+  pSNSAlertsErrorArn: NONE
+
+  # What version of Elasticsearch you want to use
+  pElasticSearchVersion: 7.9
+
+  # ARN of a custom StateMachine to call after inventory state machines are run
+  pDeployCustomStackStateMachineArn:
+
+  # SNS Topic Arn to Send Info Alerts (Leave as NONE for no info alerts)
+  pSNSAlertsInfoArn: NONE
+
+  # Size to assign to all Lambda
+  pDefaultLambdaSize: 1024
+
+  # What you will modify the User pool after it is created (Can't be done via CFT)
+  pCognitoDomain: antiope
+
+  # Deploy the Elastic Search Cluster component of Antiope
+  pDeployElasticSearch: false
+
+  # JSON Event sent to the Master StepFunction
+  pEventJson: >
+    {
+      "AWS-Inventory": {
+        "payer": [ "ENTER PAYER ACCOUNT(s)" ]
+      }
+    }
+
+  # Enable Encryption for the Elasticsearch Cluster
+  pClusterEncryption: false
+
+  # Name of the Identity Pool. Cannot contain non-alphanumeric char
+  pIdentityPoolName: AntiopeIDPool
+
+###########
+# These stacks are needed by the SourcedParameters section
+###########
+DependentStacks:
+   AntiopeBucket: YOURCOMPANY-antiope-bucket-ENVIRONMENT
+
+###########
+# Parameters that come from other deployed stacks.
+# Valid Sections are Resources, Outputs Parameters
+#
+# Hint. Get your list of resources this way:
+# aws cloudformation describe-stack-resources --stack-name stack_name_for_other_stack --output text
+SourcedParameters:
+
+  # SNS Topic from the Antiope Bucket Stack.
+  pS3EventNotificationTopicArn: AntiopeBucket.Outputs.ResourceNotificationTopicArn
+
+###########
+# Tags that apply to the stack. Will be inherited by some resources.
+###########
+Tags:
+  Name: YOURCOMPANY-antiope-ENVIRONMENT
+  environment: ENVIRONMENT
+
+
+###########
+# Stack Policies protect resources from accidental deletion or replacement
+# for the definition of stack policies see:
+# see http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html#stack-policy-reference
+###########
+StackPolicy:
+    # All resources should be modifiable.
+  - Resource: "*"
+    Effect: Allow
+    Principal: "*"
+    Action:
+      - "Update:Modify"
+      - "Update:Delete"
+      - "Update:Replace"
+
+# End of Manifest
