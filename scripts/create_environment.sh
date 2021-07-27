@@ -38,7 +38,7 @@ sed -i '' s/YOURCOMPANY/$COMPANY/g config.$ENVIRONMENT
 sed -i '' s/ENVIRONMENT/$ENVIRONMENT/g config.$ENVIRONMENT
 
 # Use the SAMPLE Manifest
-cp Manifests/Antiope-SAMPLE-Manifest.yaml Manifest/Antiope-$ENVIRONMENT-Manifest.yaml
+cp Manifests/Antiope-SAMPLE-Manifest.yaml Manifests/Antiope-$ENVIRONMENT-Manifest.yaml
 sed -i '' s/YOURCOMPANY/$COMPANY/g Manifests/Antiope-$ENVIRONMENT-Manifest.yaml
 sed -i '' s/ENVIRONMENT/$ENVIRONMENT/g Manifests/Antiope-$ENVIRONMENT-Manifest.yaml
 
