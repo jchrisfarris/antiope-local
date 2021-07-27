@@ -38,12 +38,12 @@ sed -i '' s/YOURCOMPANY/$COMPANY/g config.$ENVIRONMENT
 sed -i '' s/ENVIRONMENT/$ENVIRONMENT/g config.$ENVIRONMENT
 
 # Use the SAMPLE Manifest
-cp Manifest/Antiope-SAMPLE-Manifest.yaml Manifest/Antiope-$ENVIRONMENT-Manifest.yaml
-sed -i '' s/YOURCOMPANY/$COMPANY/g Manifest/Antiope-$ENVIRONMENT-Manifest.yaml
-sed -i '' s/ENVIRONMENT/$ENVIRONMENT/g Manifest/Antiope-$ENVIRONMENT-Manifest.yaml
+cp Manifests/Antiope-SAMPLE-Manifest.yaml Manifest/Antiope-$ENVIRONMENT-Manifest.yaml
+sed -i '' s/YOURCOMPANY/$COMPANY/g Manifests/Antiope-$ENVIRONMENT-Manifest.yaml
+sed -i '' s/ENVIRONMENT/$ENVIRONMENT/g Manifests/Antiope-$ENVIRONMENT-Manifest.yaml
 
 # Create Manifest files
 
-cft-generate-manifest -m Manifest/Antiope-Bucket-$ENVIRONMENT-Manifest.yaml -t antiope/cloudformation/antiope-bucket-Template.yaml \
+cft-generate-manifest -m Manifests/Antiope-Bucket-$ENVIRONMENT-Manifest.yaml -t antiope/cloudformation/antiope-bucket-Template.yaml \
 	--stack-name $COMPANY-antiope-bucket-$ENVIRONMENT --region $AWS_DEFAULT_REGION --termination-protection
 
