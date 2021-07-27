@@ -37,7 +37,6 @@ endif
 export DEPLOY_PREFIX=deploy-packages
 
 # Local to this Makefile Vars
-CONFIG_PREFIX=config-files
 MAIN_TEMPLATE=antiope/cloudformation/antiope-Template.yaml
 OUTPUT_TEMPLATE_PREFIX=antiope-Template-Transformed
 OUTPUT_TEMPLATE=$(OUTPUT_TEMPLATE_PREFIX)-$(version).yaml
@@ -94,7 +93,7 @@ post-deploy:
 
 # promote an existing stack to a new environment
 # Assumes cross-account access to the lower environment's DEPLOY_PREFIX
-promote: cft-promote push-config
+promote: cft-promote
 
 # Run cft-deploy with a different manifest on a previously uploaded code bundle and transformed template
 cft-promote:
@@ -108,6 +107,37 @@ ifndef template
 	$(error template is not set)
 endif
 	cft-deploy -m Manifests/$(MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
+
+
+#
+# Optional Custom Stack Targets
+#
+CUSTOM_TEMPLATE=cloudformation/$(CUSTOM_PREFIX)-Template.yaml
+CUSTOM_OUTPUT_TEMPLATE=$(CUSTOM_PREFIX)-Template-Transformed-$(version).yaml
+CUSTOM_MANIFEST=Manifests/$(CUSTOM_PREFIX)-$(env)-Manifest.yaml
+CUSTOM_TEMPLATE_URL ?= https://s3.amazonaws.com/$(BUCKET)/$(DEPLOY_PREFIX)/$(CUSTOM_OUTPUT_TEMPLATE)
+
+custom-test:
+	for f in custom-lambda/*.py ; do python3 -m py_compile $$f; if [ $$? -ne 0 ] ; then echo "$$f FAILS" ; exit 1; fi done
+
+custom-package: custom-test
+ifndef CUSTOM_PREFIX
+	$(error CUSTOM_PREFIX is not set)
+endif
+	@aws cloudformation package --template-file $(CUSTOM_TEMPLATE) --s3-bucket $(BUCKET) --s3-prefix $(DEPLOY_PREFIX)/transform --output-template-file cloudformation/$(CUSTOM_OUTPUT_TEMPLATE)  --metadata build_ver=$(version)
+	@aws s3 cp cloudformation/$(CUSTOM_OUTPUT_TEMPLATE) s3://$(BUCKET)/$(DEPLOY_PREFIX)/
+
+custom-deploy: custom-package
+ifndef CUSTOM_PREFIX
+	$(error CUSTOM_PREFIX is not set)
+endif
+	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(CUSTOM_TEMPLATE_URL) pTemplateURL=$(CUSTOM_TEMPLATE_URL) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
+
+custom-promote:
+ifndef template
+	$(error template is not set)
+endif
+	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
 
 
 #
