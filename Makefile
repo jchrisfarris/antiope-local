@@ -80,7 +80,7 @@ endif
 ifndef LAYER_URL
 	$(error LAYER_URL is not set)
 endif
-	cft-deploy -m Manifest/$(MANIFEST) --template-url $(TEMPLATE_URL) pTemplateURL=$(TEMPLATE_URL) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
+	cft-deploy -m Manifests/$(MANIFEST) --template-url $(TEMPLATE_URL) pTemplateURL=$(TEMPLATE_URL) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
 
 # Execute the post-deploy scripts required to make it all work
 post-deploy:
@@ -107,7 +107,7 @@ endif
 ifndef template
 	$(error template is not set)
 endif
-	cft-deploy -m Manifest/$(MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
+	cft-deploy -m Manifests/$(MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
 
 
 #
