@@ -10,26 +10,15 @@ Notes.md
 *-config.json
 *dist-info
 
-# Deploy specific env vars passed to makefile. Not to be shared.
-config.*
-
-
-
-# don't commit the config-files
-config-files/
-
-# Manifests are inputs to Cloudformation. They contain deploy specific things (like payer accounts)
-*Manifest.yaml
-cloudformation/*Transformed*.yaml
-
-# Test events also contain sensitive datad
-*test-events/*
-
 # Do not want creds in github!
 azure_cred.json
 
 # Don't commit error reports
 *-Errors.html
+
+# we don't need to commit transformed templates
+cloudformation/*Transformed*.yaml
+
 
 # Created by https://www.gitignore.io/api/osx,python
 
