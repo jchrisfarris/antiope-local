@@ -1,0 +1,290 @@
+# Copyright 2020-2021 Chris Farris <chrisf@primeharbor.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SAMPLE Template for Antiope Customizations
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+
+  pBucketName:
+    Description: Main Antiope Bucket Name
+    Type: String
+
+  pAWSLambdaLayerPackage:
+    Description: Object Key for the Antiope Python Dependencies Lambda Layer
+    Type: String
+
+  pAWSRoleName:
+    Description: Default name of the AssumeRole to assume into accounts
+    Type: String
+    Default: Security-Audit
+
+  pDefaultLambdaSize:
+    Description: Size to assign to all Lambda
+    Type: Number
+    Default: 3008
+
+  pMaxLambdaDuration:
+    Description: How long to let the Lambda Run
+    Type: Number
+    Default: 300
+
+  #
+  # Imported from the Main Antiope Stack
+  #
+  pAccountTable:
+    Description: Name of Account Table from Antiope Inventory Stack
+    Type: String
+
+  pVPCTable:
+    Description: Name of VPC Table from Antiope Inventory Stack
+    Type: String
+
+  pBillingDataTable:
+    Description: Name of BillingData Table from Antiope Inventory Stack
+    Type: String
+
+  pTriggerAccountInventoryFunctionTopic:
+    Description: Topic for the AWS Account Inventory of Antiope
+    Type: String
+
+  pTriggerPayerInventoryFunctionTopic:
+    Description: Topic for the AWS Payer Inventory of Antiope
+    Type: String
+
+  pTemplateURL:
+    Description: URL to the Transformed Template this stack was deployed with (for promotion to another environment)
+    Type: String
+
+  pElasticClusterName:
+    Description: ElasticSearch Cluster Name
+    Type: String
+
+  pElasticEndpoint:
+    Description: Cluster ClusterEndpoint
+    Type: String
+
+  #
+  # Antiope Error Handling
+  #
+  pErrorHandlerEventQueueName:
+    Description: Name of the Error Queue for the AWS Inventory Stack of Antiope
+    Type: String
+
+  pErrorHandlerEventQueueURL:
+    Description: URL of the Error Queue for the AWS Inventory Stack of Antiope
+    Type: String
+
+
+Globals:
+  Function:
+    Runtime: python3.7
+    MemorySize: !Ref pDefaultLambdaSize
+    Timeout: !Ref pMaxLambdaDuration
+    Layers:
+      - !Ref CustomInventoryLambdaLayer
+    Environment:
+      Variables:
+          ROLE_SESSION_NAME: !Ref AWS::StackName
+          INVENTORY_BUCKET: !Ref pBucketName
+          ACCOUNT_TABLE: !Ref pAccountTable
+          VPC_TABLE: !Ref pVPCTable
+          ROLE_NAME: !Ref pAWSRoleName
+          ERROR_QUEUE: !Ref pErrorHandlerEventQueueURL
+          LOG_LEVEL: 'INFO'
+          ES_DOMAIN_ENDPOINT: !Ref pElasticEndpoint
+
+Resources:
+
+  CustomLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: S3Access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - s3:*
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:s3:::${pBucketName}/*"
+              - !Sub "arn:aws:s3:::${pBucketName}"
+          - Action:
+            - s3:ListAllMyBuckets
+            - s3:GetBucketLocation
+            Effect: Allow
+            Resource: '*'
+      - PolicyName: LambdaLogging
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource: '*'
+            Action:
+            - logs:*
+            Effect: Allow
+      - PolicyName: DynamoAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource:
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${pAccountTable}"
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${pVPCTable}"
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${pVPCTable}/index/*"
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${pBillingDataTable}"
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${pBillingDataTable}/index/*"
+            Action:
+            - dynamodb:*
+            Effect: Allow
+      - PolicyName: AssumeCrossAccountRole
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: "Allow"
+            Action:
+            - sts:AssumeRole
+            Resource: !Sub "arn:aws:iam::*:role/${pAWSRoleName}"
+      - PolicyName: ListExecutions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: "Allow"
+            Action:
+            - states:ListExecutions
+            Resource: !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}"
+      - PolicyName: ElasticSearch
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${pElasticClusterName}/*"
+            Action:
+            - es:*
+            Effect: Allow
+      - PolicyName: PublishToErrorQueueSQS
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: "Allow"
+            Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            Resource:
+              - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${pErrorHandlerEventQueueName}"
+      - PolicyName: DescribeRegions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: "Allow"
+            Action:
+            - ec2:DescribeRegions
+            Resource: "*"
+      # Add additional permissions needed here
+
+
+  #
+  # State Machine Functions
+  #
+
+  CreateAccountReportLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-create-account-report"
+      Description: Create an HTML Report with all the AWS Accounts
+      Handler: report-accounts.handler
+      Role: !GetAtt CustomLambdaRole.Arn
+      CodeUri: ../custom-lambda
+
+
+  #
+  # StateMachine
+  #
+
+  StateMachineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - !Sub states.${AWS::Region}.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: InvokeLambda
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+              - !GetAtt CreateAccountReportLambdaFunction.Arn
+      - PolicyName: Logging
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Resource: '*'
+            Action:
+            - logs:*
+            Effect: Allow
+
+  CustomStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !GetAtt StateMachineExecutionRole.Arn
+      StateMachineName: !Ref AWS::StackName
+      DefinitionString: !Sub |-
+        {
+          "Comment": "(${AWS::StackName}) Antiope customizations",
+          "StartAt": "CreateAccountReportLambdaFunction",
+          "States": {
+
+            "CreateAccountReportLambdaFunction": {
+              "Type": "Task",
+              "Resource": "${CreateAccountReportLambdaFunction.Arn}",
+              "Next": "AnotherFunction"
+            }
+
+          }
+        }
+
+
+Outputs:
+  StackName:
+    Value: !Ref AWS::StackName
+    Description: Just the name of this stack
+
+  CustomStateMachineArn:
+    Value: !Ref CustomStateMachine
+    Description: Arn of the StepFunction to be called after the main inventory stack
+
+  TemplateURL:
+    Description: URL to the Transformed Template this stack was deployed with (for promotion to another environment)
+    Value: !Ref pTemplateURL
+
