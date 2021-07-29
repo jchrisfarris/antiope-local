@@ -117,10 +117,13 @@ CUSTOM_OUTPUT_TEMPLATE=$(CUSTOM_PREFIX)-Template-Transformed-$(version).yaml
 CUSTOM_MANIFEST=Manifests/$(CUSTOM_PREFIX)-$(env)-Manifest.yaml
 CUSTOM_TEMPLATE_URL ?= https://s3.amazonaws.com/$(BUCKET)/$(DEPLOY_PREFIX)/$(CUSTOM_OUTPUT_TEMPLATE)
 
-custom-test:
-	for f in custom-lambda/*.py ; do python3 -m py_compile $$f; if [ $$? -ne 0 ] ; then echo "$$f FAILS" ; exit 1; fi done
+custom-deps:
+	cd custom-lambda && $(MAKE) deps
 
-custom-package: custom-test
+custom-test:
+	cd custom-lambda && $(MAKE) test
+
+custom-package: custom-test custom-deps
 ifndef CUSTOM_PREFIX
 	$(error CUSTOM_PREFIX is not set)
 endif
@@ -131,14 +134,13 @@ custom-deploy: custom-package
 ifndef CUSTOM_PREFIX
 	$(error CUSTOM_PREFIX is not set)
 endif
-	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(CUSTOM_TEMPLATE_URL) pTemplateURL=$(CUSTOM_TEMPLATE_URL) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
+	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(CUSTOM_TEMPLATE_URL) pTemplateURL=$(CUSTOM_TEMPLATE_URL) pBucketName=$(BUCKET) --force
 
 custom-promote:
 ifndef template
 	$(error template is not set)
 endif
-	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) pAWSLambdaLayerPackage=$(LAYER_URL) --force
-
+	cft-deploy -m $(CUSTOM_MANIFEST) --template-url $(template) pTemplateURL=$(template) pBucketName=$(BUCKET) --force
 
 #
 # Testing & Cleanup Targets
