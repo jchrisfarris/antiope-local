@@ -152,6 +152,8 @@ cft-validate:
 # Clean up dev artifacts
 clean:
 	cd antiope && $(MAKE) clean
+	cd custom-lambda && $(MAKE) clean
+	cd custom-layer && $(MAKE) clean
 
 # Run pep8 style checks on lambda
 pep8:
