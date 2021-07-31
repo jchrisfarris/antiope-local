@@ -1,7 +1,7 @@
 # antiope-local - Sample Antiope Local Repo
 
 ## What this repo is
-This repository is intended to host the configuration files and customizations to [Antiope](https://github.com/jchrisfarris/antiope).
+This repository is intended to host the configuration files and customization to [Antiope](https://github.com/jchrisfarris/antiope).
 
 **Please do not fork this repository!!!** Instead clone this repository and run the [convert-to-private-repo.sh](https://github.com/jchrisfarris/antiope-local/blob/main/scripts/convert-to-private-repo.sh) script.
 
@@ -14,10 +14,10 @@ Note: In order to avoid a dependency loop, you must first deploy the main antiop
 
 **After cloning this repo, and converting it private delete this readme content above this line, and customize the following for your company. Consider a Search and Replace on YOURCOMPANY**
 
-# YOURCOMPANY-antiope-local - internal customizations & configuration for Antiope
+# YOURCOMPANY-antiope-local - internal customization & configuration for Antiope
 
 ## How to use this repo
-This repo contains propritary code and config for YOURCOMPANY. It should not be made public!!
+This repo contains proprietary code and config for YOURCOMPANY. It should not be made public!!
 
 It is based off of the [Antiope Local Repo](https://github.com/jchrisfarris/antiope-local) which is designed to facilitate the deployment and customization of Antiope.
 
@@ -43,8 +43,8 @@ This will create a config.$ENVNAME file, and Manifest files for both Antiope and
 
 After running create_environment.sh, you must edit the Manifest files to customize Antiope to your environment.
 
-## Customizations
-Antiope is intended to be a base upon which you can build your own inventory functions based on your organization's needs. This private repo contains the scripts, cloudformation templates and lambda functions for your customizations. [More information on Antiope customizations is here](https://github.com/jchrisfarris/antiope/blob/development/docs/Customizations.md)
+## Customization
+Antiope is intended to be a base upon which you can build your own inventory functions based on your organization's needs. This private repo contains the scripts, cloudformation templates and lambda functions for your customization. [More information on Antiope customization is here](https://github.com/jchrisfarris/antiope/blob/development/docs/Customizations.md)
 
 
 
