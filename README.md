@@ -14,6 +14,8 @@ Note: In order to avoid a dependency loop, you must first deploy the main antiop
 
 **After cloning this repo, and converting it private delete this readme content above this line, and customize the following for your company. Consider a Search and Replace on YOURCOMPANY**
 
+-----
+
 # YOURCOMPANY-antiope-local - internal customization & configuration for Antiope
 
 ## How to use this repo
