@@ -3,7 +3,11 @@
 ## What this repo is
 This repository is intended to host the configuration files and customization to [Antiope](https://github.com/jchrisfarris/antiope).
 
-**Please do not fork this repository!!!** Instead clone this repository and run the [convert-to-private-repo.sh](https://github.com/jchrisfarris/antiope-local/blob/main/scripts/convert-to-private-repo.sh) script.
+**Please do not fork this repository!!!** Instead create an empty *private* repository in GitHub. Then clone this repository and run the [convert-to-private-repo.sh](https://github.com/jchrisfarris/antiope-local/blob/main/scripts/convert-to-private-repo.sh) script.
+```bash
+./scripts/convert-to-private-repo.sh https://github.com/YOURORG/REPONAME.git
+```
+This will delete the .git file from this repo, and load this content into your new private repo. 
 
 Antiope uses [cft-deploy](https://github.com/jchrisfarris/cft-deploy) and Manifest files to version control and manage the Cloudformation stack parameters. Additionally environment specific config files are leveraged by the Makefiles. None of these files should **ever** be public.
 
